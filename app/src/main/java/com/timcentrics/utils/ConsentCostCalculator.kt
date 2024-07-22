@@ -78,12 +78,14 @@ open class ConsentCostCalculator {
                 "Analyzing consent cost for ${service.name}"
             )
 
+            // Check consent cost according to the mapped logic
             for (dataConsented in service.consentList) {
                 serviceCostMap[dataConsented]?.let { consentScore ->
                     serviceConsentCostScore += consentScore
                 }
             }
 
+            // Check consent cost according to special logic
             for (dataProcessor in specialCaseCostProcessorsList) {
                 serviceConsentCostScore += dataProcessor(
                     service.consentList,

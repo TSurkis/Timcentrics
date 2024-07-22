@@ -44,14 +44,24 @@ class UserConsentCostViewModel(
 
     private fun onResponse(response: UsercentricsConsentUserResponse?) {
         viewModelScope.launch(Dispatchers.IO) {
+            // Find only the services the user consented to from the SDK's response
+            val consentedServices =
+                response?.consents?.filter { consent -> consent.status }?.toList() ?: emptyList()
+
             val usercentricsData = Usercentrics.instance.getCMPData()
             val consentCost: ConsentCostModel = userConsentCostCalculator.calculate(
-                usercentricsData.services.map { service ->
-                    ServicesConsentData(
-                        name = service.nameOfProcessingCompany,
-                        consentList = service.dataCollectedList
-                    )
-                }
+                usercentricsData.services
+                    // From all the provided services filter only the services the user has consented to
+                    .filter { service ->
+                        consentedServices.find { consentedService -> consentedService.templateId == service.templateId } != null
+                    }
+                    // Map the consented services to the required list in the calculator to check cost
+                    .map { service ->
+                        ServicesConsentData(
+                            name = service.nameOfProcessingCompany,
+                            consentList = service.dataCollectedList
+                        )
+                    }
             )
 
             _userConsentScreenState.postValue(
